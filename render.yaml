@@ -28,6 +28,12 @@ services:
         value: "true"
       - key: COREXIA_PATH
         value: "matrix_scanner"
+      - key: COREXIA_TZ
+        value: "America/New_York"
+      - key: COREXIA_RUN_TIMES
+        value: "09:30,10:30,11:30,14:30,15:30"
+      - key: COREXIA_RUN_MODE
+        value: "schedule"
       - key: PYTHONUNBUFFERED
         value: "1"
   - type: worker

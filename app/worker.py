@@ -5,7 +5,10 @@ This runs on a schedule (cron) and executes the agent decision cycle.
 
 NO UI DEPENDENCY. Ever.
 """
-from datetime import datetime
+from datetime import datetime, timedelta, time as dt_time
+import os
+import time
+from zoneinfo import ZoneInfo
 
 from app.config import STEWARD_PROFILE, OPERATOR_PROFILE, HUNTER_PROFILE, CAPITAL_START
 from app.supabase_client import supabase, get_agent_id
@@ -190,6 +193,75 @@ def run_daily():
     print("="*60 + "\n")
 
 
+def _parse_run_times(value: str):
+    times = []
+    for token in value.split(","):
+        token = token.strip()
+        if not token:
+            continue
+        parts = token.split(":")
+        if len(parts) != 2:
+            continue
+        try:
+            hour = int(parts[0])
+            minute = int(parts[1])
+        except ValueError:
+            continue
+        if 0 <= hour <= 23 and 0 <= minute <= 59:
+            times.append((hour, minute))
+    return sorted(set(times))
+
+
+def _next_weekday(date_value):
+    while date_value.weekday() >= 5:
+        date_value += timedelta(days=1)
+    return date_value
+
+
+def _next_run_time(now, run_times, tz):
+    if not run_times:
+        run_times = [(9, 30), (10, 30), (11, 30), (14, 30), (15, 30)]
+
+    if now.weekday() >= 5:
+        next_date = _next_weekday(now.date())
+        hour, minute = run_times[0]
+        return datetime.combine(next_date, dt_time(hour, minute), tzinfo=tz)
+
+    for hour, minute in run_times:
+        candidate = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if candidate > now:
+            return candidate
+
+    next_date = _next_weekday(now.date() + timedelta(days=1))
+    hour, minute = run_times[0]
+    return datetime.combine(next_date, dt_time(hour, minute), tzinfo=tz)
+
+
+def schedule_loop():
+    tz_name = os.getenv("COREXIA_TZ", "America/New_York")
+    run_times_raw = os.getenv(
+        "COREXIA_RUN_TIMES",
+        "09:30,10:30,11:30,14:30,15:30"
+    )
+    run_times = _parse_run_times(run_times_raw)
+    tz = ZoneInfo(tz_name)
+
+    print(f"COREXIA worker schedule ({tz_name}): {run_times_raw}")
+    while True:
+        now = datetime.now(tz)
+        next_run = _next_run_time(now, run_times, tz)
+        sleep_seconds = max(0.0, (next_run - now).total_seconds())
+        print(f"Next run at {next_run.isoformat()}")
+        time.sleep(sleep_seconds)
+        try:
+            run_daily()
+        except Exception as exc:
+            print(f"[ERROR] Scheduled run failed: {exc}")
+
+
 if __name__ == "__main__":
-    # For testing: run manually
-    run_daily()
+    mode = os.getenv("COREXIA_RUN_MODE", "schedule").lower()
+    if mode == "once":
+        run_daily()
+    else:
+        schedule_loop()

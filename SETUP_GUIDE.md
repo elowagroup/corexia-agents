@@ -35,6 +35,11 @@ ALPACA_PAPER=true
 
 # Agent Config
 CAPITAL_START=10000
+
+# Agent Schedule (ET default)
+COREXIA_TZ=America/New_York
+COREXIA_RUN_TIMES=09:30,10:30,11:30,14:30,15:30
+COREXIA_RUN_MODE=schedule
 ```
 
 ### 3. Set Up Supabase Database

@@ -100,12 +100,20 @@ streamlit run observer_console.py
 
 The console never executes trades. It only reads Supabase logs and telemetry.
 
-### Production (Cron)
+### Production (Schedule)
 
-Set up a daily cron job at market close (4:00 PM ET):
+Run the worker on key US session times by setting:
 
-```cron
-0 21 * * 1-5 cd /path/to/corexia-agents && python app/worker.py
+```
+COREXIA_TZ=America/New_York
+COREXIA_RUN_TIMES=09:30,10:30,11:30,14:30,15:30
+COREXIA_RUN_MODE=schedule
+```
+
+To run a single cycle manually:
+
+```
+COREXIA_RUN_MODE=once python app/worker.py
 ```
 
 ---
