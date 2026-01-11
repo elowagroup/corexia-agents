@@ -5,10 +5,15 @@ This runs on a schedule (cron) and executes the agent decision cycle.
 
 NO UI DEPENDENCY. Ever.
 """
+import sys
+from pathlib import Path
 from datetime import datetime, timedelta, time as dt_time
 import os
 import time
 from zoneinfo import ZoneInfo
+
+if __package__ is None or __package__ == "":
+    sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from app.config import STEWARD_PROFILE, OPERATOR_PROFILE, HUNTER_PROFILE, CAPITAL_START
 from app.supabase_client import supabase, get_agent_id

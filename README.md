@@ -75,7 +75,7 @@ python -c "from app.supabase_client import init_agents; init_agents()"
 ### Manual Run (Testing)
 
 ```bash
-python app/worker.py
+python -m app.worker
 ```
 
 This runs one complete agent cycle for all three agents.
@@ -113,7 +113,7 @@ COREXIA_RUN_MODE=schedule
 To run a single cycle manually:
 
 ```
-COREXIA_RUN_MODE=once python app/worker.py
+COREXIA_RUN_MODE=once python -m app.worker
 ```
 
 ---

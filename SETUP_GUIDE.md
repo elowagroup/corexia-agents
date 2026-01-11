@@ -93,7 +93,7 @@ You should see:
 ### Manual Test Run
 
 ```bash
-python app/worker.py
+python -m app.worker
 ```
 
 This runs one complete cycle for all 3 agents:
@@ -160,7 +160,7 @@ Add to your crontab:
 
 ```bash
 # Run agents daily at 4:00 PM ET (21:00 UTC)
-0 21 * * 1-5 cd /path/to/corexia-agents && python app/worker.py >> logs/agent_runs.log 2>&1
+0 21 * * 1-5 cd /path/to/corexia-agents && python -m app.worker >> logs/agent_runs.log 2>&1
 ```
 
 ### API Server (Optional)
