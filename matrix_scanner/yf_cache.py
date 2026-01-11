@@ -4,7 +4,9 @@ Shared yfinance cache/throttle helpers for COREXIA.
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import hashlib
 import os
+import pickle
 import time
 from threading import Lock
 from typing import Optional, Tuple
@@ -16,7 +18,8 @@ YF_MIN_INTERVAL = float(os.getenv("COREXIA_YF_MIN_INTERVAL", "1.0"))
 YF_MAX_RETRIES = int(os.getenv("COREXIA_YF_MAX_RETRIES", "4"))
 YF_BACKOFF = float(os.getenv("COREXIA_YF_BACKOFF", "1.8"))
 
-HIST_TTL = int(os.getenv("COREXIA_CACHE_TTL_HIST", "21600"))  # 6 hours
+CACHE_DIR = os.getenv("COREXIA_CACHE_DIR")
+HIST_TTL = int(os.getenv("COREXIA_CACHE_TTL_HIST", "86400"))  # 24 hours
 INTRA_TTL = int(os.getenv("COREXIA_CACHE_TTL_INTRA", "1800"))  # 30 min
 
 _LAST_CALL = 0.0
@@ -32,6 +35,47 @@ def _throttle():
         if wait > 0:
             time.sleep(wait)
         globals()["_LAST_CALL"] = time.monotonic()
+
+
+def _disk_cache_path(key: str) -> Optional[str]:
+    if not CACHE_DIR:
+        return None
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    return os.path.join(CACHE_DIR, f"{key}.pkl")
+
+
+def _cache_key(ticker: str, start_date: datetime, end_date: datetime, interval: str) -> str:
+    key = f"{ticker}|{interval}|{start_date.isoformat()}|{end_date.isoformat()}"
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()
+
+
+def _load_disk_cache(key: str, ttl: int):
+    path = _disk_cache_path(key)
+    if not path or not os.path.exists(path):
+        return None
+    try:
+        with open(path, "rb") as handle:
+            payload = pickle.load(handle)
+        ts = payload.get("ts")
+        data = payload.get("data")
+        if ts is None or data is None:
+            return None
+        if time.time() - ts > ttl:
+            return None
+        return data
+    except Exception:
+        return None
+
+
+def _save_disk_cache(key: str, data) -> None:
+    path = _disk_cache_path(key)
+    if not path:
+        return
+    try:
+        with open(path, "wb") as handle:
+            pickle.dump({"ts": time.time(), "data": data}, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    except Exception:
+        return
 
 
 def _normalize_dates(start_date: datetime, end_date: datetime, interval: str) -> Tuple[datetime, datetime]:
@@ -76,9 +120,17 @@ def _history_cached_fast(ticker: str, start_date: datetime, end_date: datetime, 
 
 def history_cached(ticker: str, start_date: datetime, end_date: datetime, interval: str):
     start_date, end_date = _normalize_dates(start_date, end_date, interval)
+    ttl = HIST_TTL if interval in ("1d", "1wk") else INTRA_TTL
+    key = _cache_key(ticker, start_date, end_date, interval)
+    cached = _load_disk_cache(key, ttl)
+    if cached is not None:
+        return cached
     if interval in ("1d", "1wk"):
-        return _history_cached_slow(ticker, start_date, end_date, interval)
-    return _history_cached_fast(ticker, start_date, end_date, interval)
+        data = _history_cached_slow(ticker, start_date, end_date, interval)
+    else:
+        data = _history_cached_fast(ticker, start_date, end_date, interval)
+    _save_disk_cache(key, data)
+    return data
 
 
 def _parse_period(period: str) -> Optional[timedelta]:

@@ -5,9 +5,19 @@ services:
     rootDir: matrix_scanner
     buildCommand: "pip install -r requirements.txt"
     startCommand: "streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true"
+    disk:
+      name: corexia-cache
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: ALPHAVANTAGE_API_KEY
         sync: false
+      - key: COREXIA_CACHE_DIR
+        value: "/var/data/corexia-cache"
+      - key: COREXIA_CACHE_TTL_HIST
+        value: "86400"
+      - key: COREXIA_CACHE_TTL_INTRA
+        value: "1800"
       - key: PYTHONUNBUFFERED
         value: "1"
   - type: web
