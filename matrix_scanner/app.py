@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from zoneinfo import ZoneInfo
 from datetime import datetime, timedelta
+import time
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -173,7 +174,37 @@ TIMEFRAME_OPTIONS = {
     "30M": {"label": "30-Minute (30M)", "interval": "30m", "max_days": 60, "resample": None},
 }
 
-SCAN_SYMBOL_LIMIT = 500
+SCAN_SYMBOL_LIMIT = int(os.getenv("COREXIA_SCAN_LIMIT", "60"))
+YF_MIN_INTERVAL = float(os.getenv("COREXIA_YF_MIN_INTERVAL", "0.6"))
+YF_MAX_RETRIES = int(os.getenv("COREXIA_YF_MAX_RETRIES", "3"))
+YF_BACKOFF = float(os.getenv("COREXIA_YF_BACKOFF", "1.7"))
+_LAST_YF_CALL = 0.0
+
+def _throttle_yf():
+    global _LAST_YF_CALL
+    if YF_MIN_INTERVAL <= 0:
+        return
+    now = time.monotonic()
+    wait = YF_MIN_INTERVAL - (now - _LAST_YF_CALL)
+    if wait > 0:
+        time.sleep(wait)
+    _LAST_YF_CALL = time.monotonic()
+
+def _history_with_retry(stock, start_date, end_date, interval):
+    delay = max(YF_MIN_INTERVAL, 0.1)
+    for attempt in range(YF_MAX_RETRIES + 1):
+        try:
+            _throttle_yf()
+            return stock.history(start=start_date, end=end_date, interval=interval)
+        except Exception as exc:
+            msg = str(exc).lower()
+            if "too many requests" in msg or "rate" in msg:
+                if attempt >= YF_MAX_RETRIES:
+                    raise
+                time.sleep(delay)
+                delay *= YF_BACKOFF
+                continue
+            raise
 
 KEY_TIME_US = [
     {"label": "Date roll", "hour": 0, "minute": 0},
@@ -377,7 +408,7 @@ def run_corexia_scan(ticker, lookback_days, timeframes, layers, primary_tf="1D",
 
     data_symbol = "^VIX" if ticker.upper() == "VIX" else ticker
     stock = yf.Ticker(data_symbol)
-    data_daily = stock.history(start=start_date, end=end_date, interval='1d')
+    data_daily = _history_with_retry(stock, start_date, end_date, "1d")
 
     if data_daily is None or data_daily.empty:
         raise ValueError(f"No price data returned for {ticker}")
@@ -488,7 +519,7 @@ def fetch_timeframe_data(stock, timeframe, lookback_days):
     max_days = cfg["max_days"]
     start_date = end_date - timedelta(days=min(lookback_days, max_days))
 
-    data = stock.history(start=start_date, end=end_date, interval=cfg["interval"])
+    data = _history_with_retry(stock, start_date, end_date, cfg["interval"])
     if data is None or data.empty:
         return data
 
@@ -1484,7 +1515,17 @@ def render_symbol_analysis(result, settings):
 
 def render_confluence_scanner(settings):
     st.markdown("**Top Confluence Names (Swing Focus)**")
-    st.caption("Auto-scanned across each index universe. Bullish and bearish lists are mid-term aligned.")
+    st.caption("On-demand scan across each index universe. Bullish and bearish lists are mid-term aligned.")
+
+    if "run_confluence_scan" not in st.session_state:
+        st.session_state.run_confluence_scan = False
+
+    if st.button("Run confluence sweep", use_container_width=True):
+        st.session_state.run_confluence_scan = True
+
+    if not st.session_state.run_confluence_scan:
+        st.info("Sweep disabled by default to avoid rate limits. Click the button to run.")
+        return
 
     index_cols = st.columns(2)
     with index_cols[0]:
