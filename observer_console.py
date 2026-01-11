@@ -264,13 +264,13 @@ def get_supabase_client():
 
 
 @st.cache_data(ttl=60)
-def fetch_agents(supabase):
-    return supabase.table("agents").select("*").execute().data
+def fetch_agents(_supabase):
+    return _supabase.table("agents").select("*").execute().data
 
 
 @st.cache_data(ttl=60)
-def fetch_latest_regime(supabase, symbol: str):
-    result = supabase.table("market_regime_archive")\
+def fetch_latest_regime(_supabase, symbol: str):
+    result = _supabase.table("market_regime_archive")\
         .select("*")\
         .eq("symbol", symbol)\
         .order("date", desc=True)\
@@ -280,8 +280,8 @@ def fetch_latest_regime(supabase, symbol: str):
 
 
 @st.cache_data(ttl=60)
-def fetch_recent_decisions(supabase, limit: int = 40):
-    result = supabase.table("agent_decisions")\
+def fetch_recent_decisions(_supabase, limit: int = 40):
+    result = _supabase.table("agent_decisions")\
         .select("*, agents(name)")\
         .order("timestamp", desc=True)\
         .limit(limit)\
@@ -290,8 +290,8 @@ def fetch_recent_decisions(supabase, limit: int = 40):
 
 
 @st.cache_data(ttl=60)
-def fetch_open_positions(supabase):
-    result = supabase.table("agent_positions")\
+def fetch_open_positions(_supabase):
+    result = _supabase.table("agent_positions")\
         .select("*")\
         .is_("closed_at", "null")\
         .order("opened_at", desc=True)\
@@ -300,8 +300,8 @@ def fetch_open_positions(supabase):
 
 
 @st.cache_data(ttl=60)
-def fetch_performance(supabase):
-    result = supabase.table("agent_performance_daily")\
+def fetch_performance(_supabase):
+    result = _supabase.table("agent_performance_daily")\
         .select("*")\
         .order("date", desc=False)\
         .limit(2000)\
