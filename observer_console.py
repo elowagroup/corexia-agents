@@ -262,15 +262,17 @@ def get_supabase_client():
     except Exception as exc:
         return None, str(exc)
 
-
-@st.cache_data(ttl=60)
-def fetch_agents(_supabase):
-    return _supabase.table("agents").select("*").execute().data
+SUPABASE = None
 
 
 @st.cache_data(ttl=60)
-def fetch_latest_regime(_supabase, symbol: str):
-    result = _supabase.table("market_regime_archive")\
+def fetch_agents():
+    return SUPABASE.table("agents").select("*").execute().data
+
+
+@st.cache_data(ttl=60)
+def fetch_latest_regime(symbol: str):
+    result = SUPABASE.table("market_regime_archive")\
         .select("*")\
         .eq("symbol", symbol)\
         .order("date", desc=True)\
@@ -280,8 +282,8 @@ def fetch_latest_regime(_supabase, symbol: str):
 
 
 @st.cache_data(ttl=60)
-def fetch_recent_decisions(_supabase, limit: int = 40):
-    result = _supabase.table("agent_decisions")\
+def fetch_recent_decisions(limit: int = 40):
+    result = SUPABASE.table("agent_decisions")\
         .select("*, agents(name)")\
         .order("timestamp", desc=True)\
         .limit(limit)\
@@ -290,8 +292,8 @@ def fetch_recent_decisions(_supabase, limit: int = 40):
 
 
 @st.cache_data(ttl=60)
-def fetch_open_positions(_supabase):
-    result = _supabase.table("agent_positions")\
+def fetch_open_positions():
+    result = SUPABASE.table("agent_positions")\
         .select("*")\
         .is_("closed_at", "null")\
         .order("opened_at", desc=True)\
@@ -300,8 +302,8 @@ def fetch_open_positions(_supabase):
 
 
 @st.cache_data(ttl=60)
-def fetch_performance(_supabase):
-    result = _supabase.table("agent_performance_daily")\
+def fetch_performance():
+    result = SUPABASE.table("agent_performance_daily")\
         .select("*")\
         .order("date", desc=False)\
         .limit(2000)\
@@ -339,11 +341,11 @@ def render_nav():
 
 def render_home(supabase):
     symbol = st.selectbox("Market Snapshot", ["SPY", "QQQ", "IWM", "DIA", "VIX"], index=0)
-    market = fetch_latest_regime(supabase, symbol)
-    agents = fetch_agents(supabase)
-    positions = fetch_open_positions(supabase)
-    recent_decisions = fetch_recent_decisions(supabase)
-    perf = fetch_performance(supabase)
+    market = fetch_latest_regime(symbol)
+    agents = fetch_agents()
+    positions = fetch_open_positions()
+    recent_decisions = fetch_recent_decisions()
+    perf = fetch_performance()
 
     st.markdown("### Terminal Overview")
     total_agents = len(agents) if agents else 0
@@ -399,9 +401,9 @@ def render_observability(supabase):
     with controls[3]:
         st.caption("Source: Supabase")
 
-    agents = fetch_agents(supabase)
+    agents = fetch_agents()
     agent_map = {agent["id"]: agent["name"] for agent in agents} if agents else {}
-    market = fetch_latest_regime(supabase, symbol)
+    market = fetch_latest_regime(symbol)
 
     st.markdown("### Live Market Context")
     if market:
@@ -436,12 +438,12 @@ def render_observability(supabase):
         st.warning("No market regime snapshots yet. Run the agent worker to populate the archive.")
 
     st.markdown("### Agent Status")
-    positions = fetch_open_positions(supabase)
+    positions = fetch_open_positions()
     positions_by_agent = {}
     for position in positions:
         positions_by_agent.setdefault(position["agent_id"], []).append(position)
 
-    perf = fetch_performance(supabase)
+    perf = fetch_performance()
     perf_df = pd.DataFrame(perf)
     latest_perf = {}
     if not perf_df.empty:
@@ -450,7 +452,7 @@ def render_observability(supabase):
         for _, row in latest.iterrows():
             latest_perf[row["agent_id"]] = row.to_dict()
 
-    recent_decisions = fetch_recent_decisions(supabase)
+    recent_decisions = fetch_recent_decisions()
     last_decision_by_agent = {}
     for decision in recent_decisions:
         agent_name = None
@@ -505,9 +507,9 @@ def render_observability(supabase):
 
 
 def render_performance(supabase):
-    perf = fetch_performance(supabase)
+    perf = fetch_performance()
     perf_df = pd.DataFrame(perf)
-    agents = fetch_agents(supabase)
+    agents = fetch_agents()
     agent_map = {agent["id"]: agent["name"] for agent in agents} if agents else {}
 
     st.markdown("### Equity Curves")
@@ -525,8 +527,8 @@ def render_performance(supabase):
 
 def render_history(supabase):
     st.markdown("### Open Positions")
-    positions = fetch_open_positions(supabase)
-    agents = fetch_agents(supabase)
+    positions = fetch_open_positions()
+    agents = fetch_agents()
     agent_map = {agent["id"]: agent["name"] for agent in agents} if agents else {}
     if not positions:
         st.info("No open positions right now.")
@@ -539,7 +541,7 @@ def render_history(supabase):
         st.dataframe(positions_df, use_container_width=True)
 
     st.markdown("### Decision Feed")
-    recent_decisions = fetch_recent_decisions(supabase)
+    recent_decisions = fetch_recent_decisions()
     if not recent_decisions:
         st.info("No decisions logged yet.")
     else:
@@ -556,14 +558,14 @@ def render_history(supabase):
 
 def render_commentary(supabase):
     st.markdown("### Market Commentary")
-    market = fetch_latest_regime(supabase, "SPY")
+    market = fetch_latest_regime("SPY")
     if market:
         st.info(market.get("market_spine") or "No market spine recorded yet.")
     else:
         st.info("No market spine recorded yet.")
 
     st.markdown("### Narrative Stream")
-    decisions = fetch_recent_decisions(supabase, limit=60)
+    decisions = fetch_recent_decisions(limit=60)
     if not decisions:
         st.info("No commentary logged yet.")
         return
@@ -612,10 +614,12 @@ def main():
         st.error("Supabase client not available. Install dependencies: pip install -r requirements.txt")
         st.stop()
 
+    global SUPABASE
     supabase, supabase_error = get_supabase_client()
     if supabase_error:
         st.error(f"Supabase not configured: {supabase_error}")
         st.stop()
+    SUPABASE = supabase
 
     st.markdown(
         """
