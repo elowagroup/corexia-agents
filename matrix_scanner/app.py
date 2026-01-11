@@ -175,9 +175,9 @@ TIMEFRAME_OPTIONS = {
 }
 
 SCAN_SYMBOL_LIMIT = int(os.getenv("COREXIA_SCAN_LIMIT", "60"))
-YF_MIN_INTERVAL = float(os.getenv("COREXIA_YF_MIN_INTERVAL", "0.6"))
-YF_MAX_RETRIES = int(os.getenv("COREXIA_YF_MAX_RETRIES", "3"))
-YF_BACKOFF = float(os.getenv("COREXIA_YF_BACKOFF", "1.7"))
+YF_MIN_INTERVAL = float(os.getenv("COREXIA_YF_MIN_INTERVAL", "1.0"))
+YF_MAX_RETRIES = int(os.getenv("COREXIA_YF_MAX_RETRIES", "4"))
+YF_BACKOFF = float(os.getenv("COREXIA_YF_BACKOFF", "1.8"))
 _LAST_YF_CALL = 0.0
 
 def _throttle_yf():
@@ -261,13 +261,21 @@ def sidebar_controls():
             st.session_state.active_symbol = ticker
             st.session_state.active_view = "symbol"
 
+        include_intraday = st.checkbox("Include intraday (90M/30M)", value=False)
+
         if st.button("Refresh Data", use_container_width=True):
             st.session_state.cache_bust += 1
 
     return {
         "lookback_days": 7300,
         "primary_tf": "1D",
-        "timeframes": {tf: (tf in ["1W", "1D", "4H", "90M", "30M"]) for tf in TIMEFRAME_OPTIONS.keys()},
+        "timeframes": {
+            "1W": True,
+            "1D": True,
+            "4H": True,
+            "90M": include_intraday,
+            "30M": include_intraday
+        },
         "layers": {
             "market_memory": True,
             "regime": True,
@@ -564,26 +572,49 @@ def cached_rss_news(ticker):
 
 @st.cache_data(ttl=900, show_spinner=False)
 def cached_scan(ticker, lookback_days, timeframes, layers, primary_tf, cache_bust):
-    return run_corexia_scan(
-        ticker=ticker,
-        lookback_days=lookback_days,
-        timeframes=timeframes,
-        layers=layers,
-        primary_tf=primary_tf,
-        fast=False
-    )
+    try:
+        return run_corexia_scan(
+            ticker=ticker,
+            lookback_days=lookback_days,
+            timeframes=timeframes,
+            layers=layers,
+            primary_tf=primary_tf,
+            fast=False
+        )
+    except Exception as exc:
+        msg = str(exc).lower()
+        if "too many requests" in msg or "rate" in msg:
+            lite_layers = dict(layers)
+            lite_layers.update({
+                "market_memory": False,
+                "regime": False,
+                "backtest": False
+            })
+            lite_timeframes = {tf: (tf in ["1W", "1D"]) for tf in timeframes.keys()}
+            result = run_corexia_scan(
+                ticker=ticker,
+                lookback_days=lookback_days,
+                timeframes=lite_timeframes,
+                layers=lite_layers,
+                primary_tf="1D",
+                fast=True
+            )
+            result["warning"] = "Rate limited: running lite scan (daily/weekly only)."
+            return result
+        raise
 
 @st.cache_data(ttl=900, show_spinner=False)
 def cached_macro_snapshot(lookback_days, layers, cache_bust):
     snapshot = {}
     macro_layers = dict(layers)
     macro_layers['backtest'] = False
+    macro_timeframes = {"1W": True, "1D": True, "4H": False, "90M": False}
     for symbol in MACRO_SYMBOLS:
         try:
             snapshot[symbol] = run_corexia_scan(
                 ticker=symbol,
                 lookback_days=lookback_days,
-                timeframes={"1W": True, "1D": True, "4H": True, "90M": True},
+                timeframes=macro_timeframes,
                 layers=macro_layers,
                 primary_tf="1D",
                 fast=True
@@ -612,7 +643,7 @@ def cached_top_confluence(index_name, cache_bust):
         "technical": True,
         "backtest": False
     }
-    scan_timeframes = {"1W": True, "1D": True, "4H": True, "90M": True, "30M": True}
+    scan_timeframes = {"1W": True, "1D": True, "4H": False, "90M": False, "30M": False}
     scan_days = 7300
 
     bullish = []
@@ -1432,6 +1463,9 @@ def render_symbol_analysis(result, settings):
         st.metric("Friction", result.get("market_friction", "Unknown"))
         st.metric("Last Price", f"${result['current_price']:.2f}")
         st.caption(result['scan_time'].strftime("%Y-%m-%d %H:%M"))
+
+    if result.get("warning"):
+        st.warning(result["warning"])
 
     render_key_time_panel()
 
