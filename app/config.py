@@ -18,7 +18,7 @@ ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY")
 ALPACA_PAPER = os.getenv("ALPACA_PAPER", "true").lower() == "true"
 
 # COREXIA
-COREXIA_PATH = Path(os.getenv("COREXIA_PATH", "../matrix_scanner"))
+COREXIA_PATH = Path(os.getenv("COREXIA_PATH", "matrix_scanner"))
 
 # Capital
 CAPITAL_START = float(os.getenv("CAPITAL_START", "10000"))

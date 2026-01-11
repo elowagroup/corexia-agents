@@ -49,7 +49,7 @@ cp .env.example .env
 Required:
 - SUPABASE_URL - Your Supabase project URL
 - SUPABASE_SERVICE_KEY - Service role key (backend only)
-- COREXIA_PATH - Path to matrix_scanner directory
+- COREXIA_PATH - Path to matrix_scanner directory (monorepo: matrix_scanner)
 
 Optional (Observer Console):
 - SUPABASE_ANON_KEY - Read-only key for the Streamlit console

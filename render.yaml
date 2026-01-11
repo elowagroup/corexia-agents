@@ -1,0 +1,52 @@
+services:
+  - type: web
+    name: corexia-scanner
+    env: python
+    rootDir: matrix_scanner
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true"
+    envVars:
+      - key: ALPHAVANTAGE_API_KEY
+        sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"
+  - type: web
+    name: corexia-agents-api
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: ALPACA_API_KEY
+        sync: false
+      - key: ALPACA_SECRET_KEY
+        sync: false
+      - key: ALPACA_PAPER
+        value: "true"
+      - key: COREXIA_PATH
+        value: "matrix_scanner"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+  - type: worker
+    name: corexia-agents-worker
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python app/worker.py"
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: ALPACA_API_KEY
+        sync: false
+      - key: ALPACA_SECRET_KEY
+        sync: false
+      - key: ALPACA_PAPER
+        value: "true"
+      - key: COREXIA_PATH
+        value: "matrix_scanner"
+      - key: PYTHONUNBUFFERED
+        value: "1"

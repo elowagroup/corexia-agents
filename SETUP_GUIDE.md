@@ -26,7 +26,7 @@ SUPABASE_SERVICE_KEY=your-service-role-key
 SUPABASE_ANON_KEY=your-anon-key
 
 # REQUIRED: COREXIA Integration
-COREXIA_PATH=../matrix_scanner
+COREXIA_PATH=matrix_scanner
 
 # OPTIONAL: Alpaca Paper Trading (for future Phase 2)
 ALPACA_API_KEY=your_alpaca_key
@@ -237,7 +237,7 @@ Fix: pip install -r requirements.txt
 
 Error: Could not import COREXIA modules
 Fix:
-1. Verify COREXIA_PATH in .env points to matrix_scanner directory
+1. Verify COREXIA_PATH in .env points to the local matrix_scanner directory
 2. Check COREXIA is set up:
    `cd ../matrix_scanner && python -c "from app import run_corexia_scan; print('OK')"`
 
