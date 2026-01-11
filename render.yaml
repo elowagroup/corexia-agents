@@ -46,6 +46,24 @@ services:
         value: "schedule"
       - key: PYTHONUNBUFFERED
         value: "1"
+  - type: web
+    name: corexia-observer
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "streamlit run observer_console.py --server.port $PORT --server.address 0.0.0.0 --server.headless true"
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: COREXIA_ADMIN_USER
+        value: "admin"
+      - key: COREXIA_ADMIN_PASSWORD
+        sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"
   - type: worker
     name: corexia-agents-worker
     env: python

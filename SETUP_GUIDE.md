@@ -40,6 +40,10 @@ CAPITAL_START=10000
 COREXIA_TZ=America/New_York
 COREXIA_RUN_TIMES=09:30,10:30,11:30,14:30,15:30
 COREXIA_RUN_MODE=schedule
+
+# Admin Console
+COREXIA_ADMIN_USER=admin
+COREXIA_ADMIN_PASSWORD=your_password
 ```
 
 ### 3. Set Up Supabase Database

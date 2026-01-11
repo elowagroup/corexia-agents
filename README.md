@@ -100,6 +100,15 @@ streamlit run observer_console.py
 
 The console never executes trades. It only reads Supabase logs and telemetry.
 
+### Admin Console (Protected)
+
+Set these env vars before launching the observer console:
+
+```
+COREXIA_ADMIN_USER=admin
+COREXIA_ADMIN_PASSWORD=your_password
+```
+
 ### Production (Schedule)
 
 Run the worker on key US session times by setting:
