@@ -7,12 +7,12 @@ import os
 from pathlib import Path
 from zoneinfo import ZoneInfo
 from datetime import datetime, timedelta
-import time
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import yfinance as yf
+from yf_cache import history_cached
 
 # Import all analysis modules
 from market_memory import MarketMemoryAnalyzer
@@ -175,36 +175,6 @@ TIMEFRAME_OPTIONS = {
 }
 
 SCAN_SYMBOL_LIMIT = int(os.getenv("COREXIA_SCAN_LIMIT", "60"))
-YF_MIN_INTERVAL = float(os.getenv("COREXIA_YF_MIN_INTERVAL", "1.0"))
-YF_MAX_RETRIES = int(os.getenv("COREXIA_YF_MAX_RETRIES", "4"))
-YF_BACKOFF = float(os.getenv("COREXIA_YF_BACKOFF", "1.8"))
-_LAST_YF_CALL = 0.0
-
-def _throttle_yf():
-    global _LAST_YF_CALL
-    if YF_MIN_INTERVAL <= 0:
-        return
-    now = time.monotonic()
-    wait = YF_MIN_INTERVAL - (now - _LAST_YF_CALL)
-    if wait > 0:
-        time.sleep(wait)
-    _LAST_YF_CALL = time.monotonic()
-
-def _history_with_retry(stock, start_date, end_date, interval):
-    delay = max(YF_MIN_INTERVAL, 0.1)
-    for attempt in range(YF_MAX_RETRIES + 1):
-        try:
-            _throttle_yf()
-            return stock.history(start=start_date, end=end_date, interval=interval)
-        except Exception as exc:
-            msg = str(exc).lower()
-            if "too many requests" in msg or "rate" in msg:
-                if attempt >= YF_MAX_RETRIES:
-                    raise
-                time.sleep(delay)
-                delay *= YF_BACKOFF
-                continue
-            raise
 
 KEY_TIME_US = [
     {"label": "Date roll", "hour": 0, "minute": 0},
@@ -415,8 +385,7 @@ def run_corexia_scan(ticker, lookback_days, timeframes, layers, primary_tf="1D",
     start_date = end_date - timedelta(days=lookback_days)
 
     data_symbol = "^VIX" if ticker.upper() == "VIX" else ticker
-    stock = yf.Ticker(data_symbol)
-    data_daily = _history_with_retry(stock, start_date, end_date, "1d")
+    data_daily = history_cached(data_symbol, start_date, end_date, "1d")
 
     if data_daily is None or data_daily.empty:
         raise ValueError(f"No price data returned for {ticker}")
@@ -463,7 +432,7 @@ def run_corexia_scan(ticker, lookback_days, timeframes, layers, primary_tf="1D",
     result['layers']['timeframes'] = {}
     active_timeframes = [tf for tf, enabled in timeframes.items() if enabled]
     for tf in active_timeframes:
-        tf_data = fetch_timeframe_data(stock, tf, lookback_days)
+        tf_data = fetch_timeframe_data(data_symbol, tf, lookback_days)
         if tf_data is None or tf_data.empty:
             result['layers']['timeframes'][tf] = {
                 'sequence': None,
@@ -517,7 +486,7 @@ def run_corexia_scan(ticker, lookback_days, timeframes, layers, primary_tf="1D",
 
     return result
 
-def fetch_timeframe_data(stock, timeframe, lookback_days):
+def fetch_timeframe_data(ticker, timeframe, lookback_days):
     """Fetch data for specific timeframe with provider limits."""
     cfg = TIMEFRAME_OPTIONS.get(timeframe)
     if not cfg:
@@ -527,7 +496,7 @@ def fetch_timeframe_data(stock, timeframe, lookback_days):
     max_days = cfg["max_days"]
     start_date = end_date - timedelta(days=min(lookback_days, max_days))
 
-    data = _history_with_retry(stock, start_date, end_date, cfg["interval"])
+    data = history_cached(ticker, start_date, end_date, cfg["interval"])
     if data is None or data.empty:
         return data
 

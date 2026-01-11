@@ -7,7 +7,7 @@ Critical for determining which signals to trust
 
 import pandas as pd
 import numpy as np
-import yfinance as yf
+from yf_cache import history_period_cached
 from datetime import datetime, timedelta
 try:
     from pandas_datareader import data as pdr
@@ -94,7 +94,7 @@ class RegimeDetector:
             bs_direction = "Expanding (QE)" if bs_change > 0 else "Contracting (QT)"
 
             # Check SPX trend (bull/bear)
-            spx = yf.Ticker('^GSPC').history(period='1y')
+            spx = history_period_cached('^GSPC', '1y')
             spx_sma200 = spx['Close'].rolling(200).mean()
             current_spx = spx['Close'].iloc[-1]
             current_sma200 = spx_sma200.iloc[-1]

@@ -7,7 +7,7 @@ and volatility where the market has reversed or stalled repeatedly.
 
 import pandas as pd
 import numpy as np
-import yfinance as yf
+from yf_cache import history_period_cached
 
 class MarketMemoryAnalyzer:
     """
@@ -146,8 +146,8 @@ class MarketMemoryAnalyzer:
         
         # NDX:SPX ratio
         try:
-            ndx = yf.Ticker('^NDX').history(period='5y')
-            spx = yf.Ticker('^SPX').history(period='5y')
+            ndx = history_period_cached('^NDX', '5y')
+            spx = history_period_cached('^SPX', '5y')
             
             ratio_ndx_spx = ndx['Close'] / spx['Close']
             current_ratio = ratio_ndx_spx.iloc[-1]
@@ -184,7 +184,7 @@ class MarketMemoryAnalyzer:
 
         # VIX analysis with full memory zones
         try:
-            vix = yf.Ticker('^VIX').history(period='2y')  # Longer history for memory analysis
+            vix = history_period_cached('^VIX', '2y')  # Longer history for memory analysis
             if vix.empty:
                 raise ValueError("VIX history is empty")
 
