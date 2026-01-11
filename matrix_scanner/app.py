@@ -175,6 +175,23 @@ TIMEFRAME_OPTIONS = {
 
 SCAN_SYMBOL_LIMIT = 500
 
+KEY_TIME_US = [
+    {"label": "Date roll", "hour": 0, "minute": 0},
+    {"label": "Pre-market pulse", "hour": 5, "minute": 30},
+    {"label": "Pre-market pulse", "hour": 7, "minute": 30},
+    {"label": "US open", "hour": 9, "minute": 30},
+    {"label": "Post-open set", "hour": 10, "minute": 30},
+    {"label": "Europe close", "hour": 11, "minute": 30},
+    {"label": "US handoff", "hour": 14, "minute": 30},
+    {"label": "Power hour", "hour": 15, "minute": 30},
+]
+
+KEY_TIME_GLOBAL = [
+    {"label": "Asia open", "tz": "Asia/Tokyo", "hour": 9, "minute": 0, "note": "Tokyo 09:00"},
+    {"label": "China open", "tz": "Asia/Shanghai", "hour": 9, "minute": 30, "note": "Shanghai 09:30"},
+    {"label": "Europe open", "tz": "Europe/London", "hour": 8, "minute": 0, "note": "London 08:00"},
+]
+
 HISTORICAL_EVENTS = [
     {"date": "2008-09-15", "label": "Lehman collapse"},
     {"date": "2011-08-08", "label": "US credit downgrade"},
@@ -230,6 +247,81 @@ def sidebar_controls():
         },
         "cache_bust": st.session_state.cache_bust
     }
+
+
+def _next_occurrence_et(now_et, hour, minute):
+    candidate = now_et.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if candidate <= now_et:
+        candidate += timedelta(days=1)
+    return candidate
+
+
+def _next_occurrence_local(now_et, tz_name, hour, minute):
+    tz = ZoneInfo(tz_name)
+    local_now = now_et.astimezone(tz)
+    local_candidate = local_now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if local_candidate <= local_now:
+        local_candidate += timedelta(days=1)
+    return local_candidate.astimezone(ZoneInfo("America/New_York"))
+
+
+def build_key_time_schedule(now_et):
+    entries = []
+    for anchor in KEY_TIME_US:
+        entries.append({
+            "dt": _next_occurrence_et(now_et, anchor["hour"], anchor["minute"]),
+            "label": anchor["label"],
+            "note": anchor.get("note")
+        })
+    for anchor in KEY_TIME_GLOBAL:
+        entries.append({
+            "dt": _next_occurrence_local(now_et, anchor["tz"], anchor["hour"], anchor["minute"]),
+            "label": anchor["label"],
+            "note": anchor.get("note")
+        })
+    entries.sort(key=lambda item: item["dt"])
+    return entries
+
+
+def render_key_time_panel():
+    now_et = datetime.now(ZoneInfo("America/New_York"))
+    entries = build_key_time_schedule(now_et)
+    if not entries:
+        return
+
+    next_entry = entries[0]
+    now_str = now_et.strftime("%H:%M ET")
+    next_label = next_entry["label"]
+    if next_entry.get("note"):
+        next_label += f" ({next_entry['note']})"
+    next_str = f"{next_entry['dt'].strftime('%H:%M')} ET {next_label}"
+
+    lines = []
+    for entry in entries:
+        time_str = entry["dt"].strftime("%H:%M")
+        label = entry["label"]
+        note = entry.get("note")
+        line = f"{time_str} {label}"
+        if note:
+            line += f" ({note})"
+        day_delta = (entry["dt"].date() - now_et.date()).days
+        if day_delta == -1:
+            line += " (-1d)"
+        elif day_delta == 1:
+            line += " (+1d)"
+        elif day_delta > 1:
+            line += f" (+{day_delta}d)"
+        lines.append(line)
+
+    content = "<br>".join(lines)
+    st.markdown(
+        f\"\"\"<div class='info-card'>
+        <div class='section-title'>Key Time Map (ET)</div>
+        <div class='subtle'>Now: {now_str} | Next: {next_str}</div>
+        <div style='margin-top: 8px; line-height: 1.6;'>{content}</div>
+        </div>\"\"\",
+        unsafe_allow_html=True
+    )
 
 def main():
     init_session_state()
@@ -1224,6 +1316,7 @@ def render_macro_overview(snapshot, settings):
     st.markdown("**Macro Stage**")
     st.write(f"State: {combined.get('market_state', 'Choppy')} | Risk: {combined.get('risk_level', 'Unknown')}")
     st.write("Macro blend uses weekly, daily, 4H, and 90M structure. Time is a confluence input.")
+    render_key_time_panel()
 
     rows = []
     for symbol in MACRO_SYMBOLS:
@@ -1308,6 +1401,8 @@ def render_symbol_analysis(result, settings):
         st.metric("Friction", result.get("market_friction", "Unknown"))
         st.metric("Last Price", f"${result['current_price']:.2f}")
         st.caption(result['scan_time'].strftime("%Y-%m-%d %H:%M"))
+
+    render_key_time_panel()
 
     # Market Narrative Spine
     st.divider()
