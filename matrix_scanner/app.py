@@ -315,11 +315,11 @@ def render_key_time_panel():
 
     content = "<br>".join(lines)
     st.markdown(
-        f\"\"\"<div class='info-card'>
+        f"""<div class='info-card'>
         <div class='section-title'>Key Time Map (ET)</div>
         <div class='subtle'>Now: {now_str} | Next: {next_str}</div>
         <div style='margin-top: 8px; line-height: 1.6;'>{content}</div>
-        </div>\"\"\",
+        </div>""",
         unsafe_allow_html=True
     )
 
