@@ -36,13 +36,13 @@ st.set_page_config(
     page_title="COREXIA",
     page_icon="C",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # Custom CSS
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;700&display=swap');
 :root {
     --bg: #0b0f14;
     --panel: #121722;
@@ -58,8 +58,40 @@ html, body, [class*="css"]  {
     font-family: 'Manrope', system-ui, sans-serif;
     color: var(--text);
 }
+.mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
 .stApp {
     background: radial-gradient(circle at 15% 10%, #141b26 0%, #0b0f14 60%);
+}
+.stButton > button {
+    background: #e6e8ed;
+    color: #0b0f14;
+    border-radius: 12px;
+    border: none;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 0.65rem 1.3rem;
+    transition: all 0.2s ease-in-out;
+}
+.stButton > button:hover {
+    background: #3ddc97;
+    color: #0b0f14;
+}
+.stTextInput input {
+    background: #0f141c;
+    color: var(--text);
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    padding: 0.6rem 0.9rem;
+}
+.stTextInput input:focus {
+    border-color: #2c3a4f;
+    box-shadow: none;
+}
+.stTextInput label {
+    color: var(--muted);
 }
 .corexia-title {
     font-family: 'Space Grotesk', system-ui, sans-serif;
@@ -73,6 +105,63 @@ html, body, [class*="css"]  {
     color: var(--muted);
     font-size: 1.05rem;
     margin-bottom: 1.6rem;
+}
+.corexia-card {
+    background: linear-gradient(145deg, #121722 0%, #0f141c 100%);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    color: var(--text);
+    text-decoration: none;
+    display: block;
+}
+.corexia-card:hover {
+    border-color: #2c3a4f;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+.station-nav {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 0.4rem 0 1.2rem 0;
+}
+.station-link {
+    border: 1px solid var(--line);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    text-decoration: none;
+    background: #0f141c;
+}
+.station-link.active {
+    background: #1c2432;
+    color: var(--text);
+    border-color: #2c3a4f;
+}
+.control-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+    margin-bottom: 0.8rem;
+}
+.control-chip {
+    border: 1px solid var(--line);
+    background: #0f141c;
+    color: var(--muted);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+.control-chip.active {
+    background: rgba(61, 220, 151, 0.15);
+    border-color: rgba(61, 220, 151, 0.4);
+    color: #7ff1bf;
 }
 .macro-grid {
     display: grid;
@@ -91,6 +180,90 @@ html, body, [class*="css"]  {
 .macro-card:hover {
     border-color: #2c3a4f;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+.index-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+.index-symbol {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.index-score {
+    text-align: right;
+}
+.index-score-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+}
+.index-score-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+.index-price {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+}
+.index-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 10px;
+}
+.index-quote {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-style: italic;
+}
+.macro-verdict {
+    position: relative;
+    overflow: hidden;
+}
+.macro-verdict::after {
+    content: "";
+    position: absolute;
+    right: -80px;
+    top: -80px;
+    width: 240px;
+    height: 240px;
+    background: rgba(61, 220, 151, 0.08);
+    filter: blur(40px);
+    border-radius: 999px;
+}
+.macro-verdict-main {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+.macro-quote {
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--muted);
+    margin-top: 0.6rem;
+}
+.macro-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 1rem;
+}
+.macro-metric-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
 }
 .macro-title {
     font-weight: 600;
@@ -162,6 +335,25 @@ html, body, [class*="css"]  {
     border-radius: 14px;
     padding: 14px 16px;
 }
+.news-item {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+.news-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+.news-meta {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -209,6 +401,22 @@ def init_session_state():
         st.session_state.active_view = "macro"
     if "cache_bust" not in st.session_state:
         st.session_state.cache_bust = 0
+    if "primary_tf" not in st.session_state:
+        st.session_state.primary_tf = "1D"
+    if "include_intraday" not in st.session_state:
+        st.session_state.include_intraday = False
+    if "layer_market_memory" not in st.session_state:
+        st.session_state.layer_market_memory = True
+    if "layer_regime" not in st.session_state:
+        st.session_state.layer_regime = True
+    if "layer_sequence" not in st.session_state:
+        st.session_state.layer_sequence = True
+    if "layer_ma_system" not in st.session_state:
+        st.session_state.layer_ma_system = True
+    if "layer_technical" not in st.session_state:
+        st.session_state.layer_technical = True
+    if "layer_backtest" not in st.session_state:
+        st.session_state.layer_backtest = False
 
 def apply_query_params():
     params = st.query_params
@@ -225,20 +433,54 @@ def apply_query_params():
 
 def sidebar_controls():
     with st.sidebar:
-        st.markdown("**COREXIA CONTROL DECK**")
-        ticker = st.text_input("Focus Ticker", st.session_state.active_symbol).upper().strip()
-        if ticker:
-            st.session_state.active_symbol = ticker
-            st.session_state.active_view = "symbol"
+        st.markdown("**COREXIA SETTINGS**")
+        include_intraday = st.checkbox(
+            "Include intraday (90M/30M)",
+            value=st.session_state.include_intraday,
+            key="include_intraday"
+        )
+        tf_keys = list(TIMEFRAME_OPTIONS.keys())
+        tf_index = tf_keys.index(st.session_state.primary_tf) if st.session_state.primary_tf in tf_keys else 1
+        primary_tf = st.selectbox("Primary timeframe", tf_keys, index=tf_index, key="primary_tf")
 
-        include_intraday = st.checkbox("Include intraday (90M/30M)", value=False)
+        st.markdown("**Signal Layers**")
+        layer_market_memory = st.checkbox(
+            "Market memory",
+            value=st.session_state.layer_market_memory,
+            key="layer_market_memory"
+        )
+        layer_regime = st.checkbox(
+            "Regime detection",
+            value=st.session_state.layer_regime,
+            key="layer_regime"
+        )
+        layer_sequence = st.checkbox(
+            "Sequence map",
+            value=st.session_state.layer_sequence,
+            key="layer_sequence"
+        )
+        layer_ma_system = st.checkbox(
+            "MA system",
+            value=st.session_state.layer_ma_system,
+            key="layer_ma_system"
+        )
+        layer_technical = st.checkbox(
+            "Technical confluence",
+            value=st.session_state.layer_technical,
+            key="layer_technical"
+        )
+        layer_backtest = st.checkbox(
+            "Backtest layer",
+            value=st.session_state.layer_backtest,
+            key="layer_backtest"
+        )
 
-        if st.button("Refresh Data", use_container_width=True):
+        if st.button("Refresh Data", use_container_width=True, key="sidebar_refresh"):
             st.session_state.cache_bust += 1
 
     return {
         "lookback_days": 7300,
-        "primary_tf": "1D",
+        "primary_tf": primary_tf,
         "timeframes": {
             "1W": True,
             "1D": True,
@@ -247,12 +489,12 @@ def sidebar_controls():
             "30M": include_intraday
         },
         "layers": {
-            "market_memory": True,
-            "regime": True,
-            "sequence": True,
-            "ma_system": True,
-            "technical": True,
-            "backtest": False
+            "market_memory": layer_market_memory,
+            "regime": layer_regime,
+            "sequence": layer_sequence,
+            "ma_system": layer_ma_system,
+            "technical": layer_technical,
+            "backtest": layer_backtest
         },
         "cache_bust": st.session_state.cache_bust
     }
@@ -332,17 +574,161 @@ def render_key_time_panel():
         unsafe_allow_html=True
     )
 
+def render_control_chips(settings):
+    chips = []
+    for tf, enabled in settings["timeframes"].items():
+        if not enabled:
+            continue
+        chip_class = "control-chip active" if tf == settings["primary_tf"] else "control-chip"
+        chips.append(f"<span class='{chip_class}'>TF {tf}</span>")
+
+    layer_labels = {
+        "market_memory": "Memory",
+        "regime": "Regime",
+        "sequence": "Sequence",
+        "ma_system": "MA",
+        "technical": "Tech",
+        "backtest": "Backtest"
+    }
+    for key, label in layer_labels.items():
+        if settings["layers"].get(key):
+            chips.append(f"<span class='control-chip active'>{label}</span>")
+
+    if chips:
+        st.markdown("<div class='control-chips'>" + "".join(chips) + "</div>", unsafe_allow_html=True)
+
+
+def render_station_nav():
+    view = st.session_state.active_view
+    symbol = st.session_state.active_symbol
+    items = [
+        ("Scanner", "?view=macro", view == "macro"),
+        ("Focus", f"?view=symbol&symbol={symbol}", view == "symbol"),
+        ("Philosophy", "?view=philosophy", view == "philosophy"),
+    ]
+    links = []
+    for label, href, active in items:
+        css_class = "station-link active" if active else "station-link"
+        links.append(f"<a class='{css_class}' href='{href}'>{label}</a>")
+    st.markdown("<div class='station-nav'>" + "".join(links) + "</div>", unsafe_allow_html=True)
+
+
+def render_control_header(settings):
+    left, right = st.columns([3, 2])
+    with left:
+        st.markdown('<div class="corexia-title">COREXIA</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="corexia-tagline">Macro intelligence, confluence discipline, human clarity.</div>',
+            unsafe_allow_html=True
+        )
+    with right:
+        render_control_chips(settings)
+        ticker_input = st.text_input(
+            "Focus Ticker",
+            value=st.session_state.active_symbol,
+            key="header_ticker_input",
+            label_visibility="collapsed",
+            placeholder="Focus ticker (SPY)"
+        )
+        ticker_value = ticker_input.upper().strip()
+        if ticker_value and ticker_value != st.session_state.active_symbol:
+            st.session_state.active_symbol = ticker_value
+            st.session_state.active_view = "symbol"
+        if st.button("Generate Matrix Data", key="header_refresh"):
+            st.session_state.cache_bust += 1
+            st.rerun()
+
+
+def render_macro_verdict(snapshot):
+    combined = snapshot.get("COMBINED", {})
+    verdict = combined.get("market_state", "Choppy")
+    score = combined.get("confluence_score", 0)
+    risk = combined.get("risk_level", "Unknown")
+    headline = combined.get("headline_signal", "Macro snapshot unavailable.")
+    states = combined.get("market_states", {})
+    state_color = "#3ddc97" if verdict == "Bullish" else "#f45b69" if verdict == "Bearish" else "#f6c343"
+    state_class = "state-bull" if verdict == "Bullish" else "state-bear" if verdict == "Bearish" else "state-chop"
+    now_et = datetime.now(ZoneInfo("America/New_York")).strftime("%H:%M ET")
+
+    st.markdown(
+        f"""<div class='corexia-card macro-verdict'>
+        <div class='section-title'>Macro Verdict</div>
+        <div class='macro-verdict-main' style='color:{state_color};'>{verdict}</div>
+        <div class='mono subtle' style='margin-top:6px;'>
+            <span class='state-dot {state_class}'></span>
+            Confluence {score}/12 | Risk {risk}
+        </div>
+        <div class='macro-quote'>"{headline}"</div>
+        <div class='macro-metrics'>
+            <div>
+                <div class='macro-metric-label'>Short</div>
+                <div>{states.get('short', '-')}</div>
+            </div>
+            <div>
+                <div class='macro-metric-label'>Mid</div>
+                <div>{states.get('mid', '-')}</div>
+            </div>
+            <div>
+                <div class='macro-metric-label'>Long</div>
+                <div>{states.get('long', '-')}</div>
+            </div>
+            <div>
+                <div class='macro-metric-label'>Sync</div>
+                <div>{now_et}</div>
+            </div>
+        </div>
+        </div>""",
+        unsafe_allow_html=True
+    )
+
+
+def render_macro_news_panel(api_key):
+    if not api_key:
+        st.markdown(
+            "<div class='corexia-card'><div class='section-title'>Institutional Flow</div>"
+            "<div class='subtle'>Alpha Vantage key missing.</div></div>",
+            unsafe_allow_html=True
+        )
+        return
+
+    news_items = cached_market_news(api_key)
+    if not news_items:
+        st.markdown(
+            "<div class='corexia-card'><div class='section-title'>Institutional Flow</div>"
+            "<div class='subtle'>No market news returned.</div></div>",
+            unsafe_allow_html=True
+        )
+        return
+
+    rows = []
+    for item in news_items[:6]:
+        ts = item.get("timestamp")
+        time_str = ts.strftime("%H:%M") if ts else "N/A"
+        source = item.get("source", "Wire")
+        title = item.get("title", "Headline")
+        url = item.get("url")
+        title_html = f"<a href='{url}' target='_blank'>{title}</a>" if url else title
+        rows.append(
+            "<div class='news-item'>"
+            f"<div class='news-meta'><span class='pill'>MARKET</span><span>{source} | {time_str}</span></div>"
+            f"<div style='margin-top:6px;'>{title_html}</div>"
+            "</div>"
+        )
+
+    st.markdown(
+        "<div class='corexia-card'>"
+        "<div class='section-title' style='margin-bottom:12px;'>Institutional Flow</div>"
+        + "".join(rows)
+        + "</div>",
+        unsafe_allow_html=True
+    )
 def main():
     init_session_state()
     apply_query_params()
 
-    st.markdown('<div class="corexia-title">COREXIA</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="corexia-tagline">Macro intelligence, confluence discipline, human clarity.</div>',
-        unsafe_allow_html=True
-    )
-
     settings = sidebar_controls()
+    render_control_header(settings)
+    render_station_nav()
 
     macro_snapshot = cached_macro_snapshot(
         settings["lookback_days"],
@@ -350,13 +736,10 @@ def main():
         settings["cache_bust"]
     )
 
-    render_macro_header(macro_snapshot)
-    st.divider()
-
     if st.session_state.active_view == "macro":
         render_macro_overview(macro_snapshot, settings)
-        st.divider()
-        render_confluence_scanner(settings)
+        with st.expander("Scanner Universe", expanded=False):
+            render_confluence_scanner(settings)
     elif st.session_state.active_view == "philosophy":
         render_philosophy_page()
     else:
@@ -1214,14 +1597,25 @@ def render_macro_header(snapshot):
         href = f"?symbol={symbol}&view=symbol"
         pill_class = "pill-green" if risk == "Low" else "pill-accent" if risk == "High" else "pill"
         state_class = "state-bull" if state == "Bullish" else "state-bear" if state == "Bearish" else "state-chop"
+        price = item.get("current_price")
+        price_html = f"<div class='index-price'>${price:.2f}</div>" if price else ""
+        headline = item.get("headline_signal") or "Point-in-time read."
         cards.append(
-            f"<a class='macro-card' href='{href}'>"
-            f"<div class='macro-title'>{symbol}</div>"
-            f"<div class='macro-metric'>Confluence {score}/12</div>"
-            f"<div class='subtle'>Risk: {risk}</div>"
+            f"<a class='corexia-card' href='{href}'>"
+            f"<div class='index-card-head'>"
+            f"<div>"
+            f"<div class='index-symbol'>{symbol}</div>"
             f"<div class='state-label'><span class='state-dot {state_class}'></span>{state}</div>"
-            f"<div class='subtle'>S:{states.get('short','-')} | M:{states.get('mid','-')} | L:{states.get('long','-')}</div>"
+            f"</div>"
+            f"<div class='index-score'>"
+            f"<div class='index-score-label'>Confluence</div>"
+            f"<div class='index-score-value'>{score}/12</div>"
+            f"</div>"
+            f"</div>"
+            f"{price_html}"
             f"<span class='pill {pill_class}'>Point-in-time</span>"
+            f"<div class='index-meta'>Risk: {risk} | S:{states.get('short','-')} M:{states.get('mid','-')} L:{states.get('long','-')}</div>"
+            f"<div class='index-quote'>\"{headline}\"</div>"
             f"</a>"
         )
 
@@ -1232,26 +1626,42 @@ def render_macro_header(snapshot):
     combined_states = combined.get('market_states', {})
     combined_class = "pill-green" if combined_risk == "Low" else "pill-accent" if combined_risk == "High" else "pill"
     combined_state_class = "state-bull" if combined_state == "Bullish" else "state-bear" if combined_state == "Bearish" else "state-chop"
+    combined_headline = combined.get("headline_signal") or "Composite macro read."
     cards.append(
-        f"<a class='macro-card' href='?view=macro'>"
-        f"<div class='macro-title'>MACRO</div>"
-        f"<div class='macro-metric'>Composite {combined_score}/12</div>"
-        f"<div class='subtle'>Risk: {combined_risk}</div>"
+        f"<a class='corexia-card' href='?view=macro'>"
+        f"<div class='index-card-head'>"
+        f"<div>"
+        f"<div class='index-symbol'>MACRO</div>"
         f"<div class='state-label'><span class='state-dot {combined_state_class}'></span>{combined_state}</div>"
-        f"<div class='subtle'>S:{combined_states.get('short','-')} | M:{combined_states.get('mid','-')} | L:{combined_states.get('long','-')}</div>"
+        f"</div>"
+        f"<div class='index-score'>"
+        f"<div class='index-score-label'>Composite</div>"
+        f"<div class='index-score-value'>{combined_score}/12</div>"
+        f"</div>"
+        f"</div>"
+        f"<div class='index-price'>Macro blend</div>"
         f"<span class='pill {combined_class}'>Combined signal</span>"
+        f"<div class='index-meta'>Risk: {combined_risk} | S:{combined_states.get('short','-')} M:{combined_states.get('mid','-')} L:{combined_states.get('long','-')}</div>"
+        f"<div class='index-quote'>\"{combined_headline}\"</div>"
         f"</a>"
     )
 
     # Add Philosophy card
     cards.append(
-        f"<a class='macro-card' href='?view=philosophy'>"
-        f"<div class='macro-title'>PHILOSOPHY</div>"
-        f"<div class='macro-metric'>What is COREXIA?</div>"
-        f"<div class='subtle'>Category definition</div>"
+        f"<a class='corexia-card' href='?view=philosophy'>"
+        f"<div class='index-card-head'>"
+        f"<div>"
+        f"<div class='index-symbol'>PHILOSOPHY</div>"
         f"<div class='state-label'>Market Intelligence</div>"
-        f"<div class='subtle'>Sensemaking, not signaling</div>"
-        f"<span class='pill'>Read</span>"
+        f"</div>"
+        f"<div class='index-score'>"
+        f"<div class='index-score-label'>Read</div>"
+        f"<div class='index-score-value'>Core</div>"
+        f"</div>"
+        f"</div>"
+        f"<div class='index-price'>What is COREXIA?</div>"
+        f"<span class='pill'>Category</span>"
+        f"<div class='index-quote'>Sensemaking, not signaling.</div>"
         f"</a>"
     )
 
@@ -1335,67 +1745,64 @@ def render_philosophy_page():
 
 def render_macro_overview(snapshot, settings):
     combined = snapshot.get("COMBINED", {})
-    now = datetime.now()
+    combined_state = combined.get("market_state", "Choppy")
+    combined_risk = combined.get("risk_level", "Unknown")
 
-    st.markdown("**COREXIA MARKET STATION**")
-    if st.button("↻ Refresh Station"):
-        st.session_state.cache_bust += 1
-        st.rerun()
-    st.write(f"Welcome. Today is {now.strftime('%A, %B %d, %Y')}.")
-    st.write(combined.get("headline_signal", "Macro snapshot unavailable."))
+    summary_col, time_col = st.columns([3, 1])
+    with summary_col:
+        render_macro_verdict(snapshot)
+    with time_col:
+        render_key_time_panel()
 
-    st.markdown("**Macro Stage**")
-    st.write(f"State: {combined.get('market_state', 'Choppy')} | Risk: {combined.get('risk_level', 'Unknown')}")
-    st.write("Macro blend uses weekly, daily, 4H, and 90M structure. Time is a confluence input.")
-    render_key_time_panel()
-
-    rows = []
-    for symbol in MACRO_SYMBOLS:
-        item = snapshot.get(symbol, {})
-        states = item.get("market_states", {})
-        rows.append({
-            "Symbol": symbol,
-            "Confluence": item.get("confluence_score", 0),
-            "State": item.get("market_state", "Choppy"),
-            "S/M/L": f"{states.get('short','-')}/{states.get('mid','-')}/{states.get('long','-')}",
-            "Friction": item.get("market_friction", "Unknown")
-        })
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
-
-    # Cross-Asset Narrative
     st.divider()
-    st.markdown("**CROSS-ASSET NARRATIVE**")
+
+    cards_col, news_col = st.columns([3, 1])
+    with cards_col:
+        render_macro_header(snapshot)
+    with news_col:
+        api_key = resolve_alpha_key()
+        render_macro_news_panel(api_key)
+
+    st.divider()
+
     narrative, confidence = build_cross_asset_narrative(snapshot)
-    st.write(narrative)
-    st.caption(f"Narrative confidence: {confidence}")
-    st.divider()
+    st.markdown(
+        f"""<div class='corexia-card'>
+        <div class='section-title'>Cross-Asset Narrative</div>
+        <div class='index-meta'>Stage: {combined_state} | Risk: {combined_risk} | Confidence: {confidence}</div>
+        <div style='margin-top:10px;'>{narrative}</div>
+        </div>""",
+        unsafe_allow_html=True
+    )
 
-    st.markdown("**Macro Releases (latest)**")
     api_key = resolve_alpha_key()
+    release_rows = []
     if api_key:
         macro_events = cached_macro_events(api_key)
         if macro_events:
             for item in macro_events[:6]:
-                date = item.get("timestamp").date() if item.get("timestamp") else "N/A"
+                timestamp = item.get("timestamp")
+                date = timestamp.date() if timestamp else "N/A"
                 value = item.get("value", "N/A")
-                st.write(f"- {item.get('title')} | {date} | {value}")
+                release_rows.append(
+                    "<div class='news-item'>"
+                    f"<div class='news-meta'><span>{item.get('title')}</span><span>{date}</span></div>"
+                    f"<div class='subtle'>Value: {value}</div>"
+                    "</div>"
+                )
         else:
-            st.write("No macro releases returned.")
+            release_rows.append("<div class='subtle'>No macro releases returned.</div>")
     else:
-        st.write("Alpha Vantage key missing. Macro releases not loaded.")
+        release_rows.append("<div class='subtle'>Alpha Vantage key missing.</div>")
 
-    st.markdown("**Macro News (headline flow)**")
-    if api_key:
-        market_news = cached_market_news(api_key)
-        if market_news:
-            for item in market_news[:6]:
-                title = item.get("title", "Untitled")
-                source = item.get("source", "Source")
-                st.write(f"- {title} ({source})")
-        else:
-            st.write("No market news returned.")
-    else:
-        st.write("Alpha Vantage key missing. News sentiment not loaded.")
+    st.markdown(
+        "<div class='corexia-card'>"
+        "<div class='section-title' style='margin-bottom:10px;'>Macro Releases</div>"
+        + "".join(release_rows)
+        + "</div>",
+        unsafe_allow_html=True
+    )
+
 
 def render_symbol_analysis(result, settings):
     ticker = result.get("ticker", "")
